@@ -20,3 +20,11 @@ its very useful when you debug code and your debugger load dll/your image with A
 to finish this one Shift+R return RVA for selected address
 
 ![alt tag](https://github.com/shmuelyr/H2o/blob/master/image/Rva.png)
+
+for example:
+
+![alt tag](https://github.com/shmuelyr/H2o/blob/master/image/RgxSearchEx.png)
+
+![alt tag](https://github.com/shmuelyr/H2o/blob/master/image/SearchResult.png)
+
+Happy reverseing!
