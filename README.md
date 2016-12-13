@@ -6,4 +6,10 @@ now there is 3 option:
 3. Rva extractor (Shift+R)
 
 AdvanceSearch is very useful when you dealing with constructor or big initialization function.
+
 ![alt tag](https://github.com/shmuelyr/H2o/blob/master/image/SearchEx.png)
+
+with GoEx you can go to any rva without calculate it, just write base+rva
+its very useful when you debug code and your debugger load dll/your image with ASLR mode.
+
+![alt tag](https://github.com/shmuelyr/H2o/blob/master/image/GohEx.png)
