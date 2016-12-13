@@ -12,4 +12,4 @@ AdvanceSearch is very useful when you dealing with constructor or big initializa
 with GoEx you can go to any rva without calculate it, just write base+rva
 its very useful when you debug code and your debugger load dll/your image with ASLR mode.
 
-![alt tag](https://github.com/shmuelyr/H2o/blob/master/image/GohEx.png)
+![alt tag](https://github.com/shmuelyr/H2o/blob/master/image/GoEx.png)
