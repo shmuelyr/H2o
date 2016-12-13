@@ -85,17 +85,24 @@ class AdvanceSearch(idaapi.Form):
         self.invert = False
         self.tbl = TableView("SearchEx")
         idaapi.Form.__init__(self, r"""SearchEx
-            <#Hint1#Expression    :{iExpr}>
-            <#Hint1#Function scope:{iScope}>""",
-                             {'iExpr': Form.StringInput(), 'iScope': Form.StringInput()}
+            <#Hint1#Function scope :{iScope}>
+            <#Hint1#Expression     :{iExpr}>
+            <#Hint1#Recursive level:{iRecu}><Regx:{rRegx}><line:{rLine}>{cRadio}>""",
+                             {'iExpr': idaapi.Form.StringInput(),
+                              'iScope': idaapi.Form.StringInput(),
+                              'iRecu': idaapi.Form.StringInput(swidth=5, value=5),
+                              'cRadio': idaapi.Form.RadGroupControl(("rRegx", "rLine"))
+                              }
                              )
 
-    def run(self, function_name, regx, max_deep):
+    def run(self, function_name, line, max_deep, mode):
 
-        print "IdaSearchEx"
-        out = self.deep_search(function_name, regx, max_deep)
+        out = {}
+        if mode == 0:  # regx
+            out = self.DeepSearchWithRgx(function_name, line, max_deep)
+        elif mode == 1:  # regular search
+            out = self.DeepSearch(function_name, line, max_deep)
         if out:
-            print out
             for addr, asm in out.iteritems():
                 self.tbl.items.append([addr, asm])
 
@@ -103,7 +110,7 @@ class AdvanceSearch(idaapi.Form):
         else:
             print "there is no result"
 
-    def deep_search(self, function_name, regx, max_deep, current_deep=0):
+    def DeepSearchWithRgx(self, function_name, regx, max_deep, current_deep=0):
 
         data = {}
         opcode_offset = 0
@@ -117,7 +124,7 @@ class AdvanceSearch(idaapi.Form):
                 if current_deep >= max_deep:
                     return
                 elif idc.GetOpnd(opcode_index, 0)[:4] == "sub_":
-                    deep = self.deep_search(
+                    deep = self.DeepSearchWithRgx(
                         idc.GetOpnd(opcode_index, 0),
                         regx, max_deep, current_deep + 1)
                     if deep:
@@ -131,6 +138,33 @@ class AdvanceSearch(idaapi.Form):
 
         return data
 
+    def DeepSearch(self, function_name, line, max_deep, current_deep=0):
+
+        data = {}
+        opcode_offset = 0
+        function_start = idc.LocByName(function_name)
+        function_end = idc.GetFunctionAttr(function_start, idc.FUNCATTR_END)
+        while function_start + opcode_offset < function_end:
+
+            opcode_index = function_start + opcode_offset
+            dline = idc.GetDisasm(opcode_index)
+            if idc.GetMnem(opcode_index) == "call":
+                if current_deep >= max_deep:
+                    return
+                elif idc.GetOpnd(opcode_index, 0)[:4] == "sub_":
+                    deep = self.DeepSearchWithRgx(
+                        idc.GetOpnd(opcode_index, 0),
+                        line, max_deep, current_deep + 1)
+                    if deep:
+                        data.update(deep)
+
+            if dline == line:
+                data["%x" % opcode_index] = dline
+
+            opcode_offset += idc.ItemSize(opcode_index)
+
+        return data
+
 
 class AdvanceGo(idaapi.Form):
 
@@ -139,7 +173,7 @@ class AdvanceGo(idaapi.Form):
         self.invert = False
         idaapi.Form.__init__(self, r"""GoEx
             <#Hint1#Expression:{iExpr}>""",
-                             {'iExpr': Form.StringInput()}
+                             {'iExpr': idaapi.Form.StringInput()}
                              )
 
     def run(self, loc):
@@ -189,7 +223,13 @@ def SearchEx():
 
     ok = form.Execute()
     if ok:
-        form.run(form.iScope.value, form.iExpr.value, 5)
+        try:
+            RecLvl = int(form.iRecu.value, 10)
+        except:
+            print "Enter valid Recursive level"
+            form.Free()
+            return
+        form.run(form.iScope.value, form.iExpr.value, RecLvl, form.cRadio.value)
     form.Free()
 
 
